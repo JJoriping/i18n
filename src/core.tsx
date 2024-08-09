@@ -3,11 +3,13 @@ import React from "react";
 import type { Lexicon, Context } from "./types";
 import { useRouter } from "next/router";
 
+type ModuleLoader = (locale:string, prefix:string) => Promise<{ default: Lexicon }>;
+
 export default class I18Next{
   public static context:React.Context<Context>;
   
   private static readonly loadedLexicons = new Map<string, Lexicon>();
-  private static moduleLoader:(locale:string, prefix:string) => Promise<{ default: Lexicon }>;
+  private static moduleLoader:ModuleLoader;
   private static globalLexicon:Record<string, Lexicon>;
   private static locales:string[];
   private static clientLoadingTask?:Promise<void>;
@@ -16,7 +18,7 @@ export default class I18Next{
     return I18Next.locales[0];
   }
 
-  public static initialize(locales:string[], moduleLoader:typeof I18Next.moduleLoader):void{
+  public static initialize(locales:string[], moduleLoader:ModuleLoader):void{
     I18Next.locales = locales;
     I18Next.moduleLoader = moduleLoader;
     I18Next.context = React.createContext<Context>({ locale: I18Next.defaultLocale });
