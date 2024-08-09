@@ -1,0 +1,28 @@
+{
+  "name": "@daldalso/i18next",
+  "version": "0.8.2",
+  "description": "Yet another internationalization library for Next.js",
+  "main": "dist/index.js",
+  "repository": {
+    "url": "git+https://github.com/JJoriping/i18next.git"
+  },
+  "author": "JJoriping",
+  "license": "MIT",
+  "scripts": {
+    "watch": "tsc -w",
+    "build": "tsc"
+  },
+  "files": [
+    "/LICENSE",
+    "/README.md",
+    "/dist/"
+  ],
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "react": "^18.3.1",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "next": "^14"
+  }
+}
