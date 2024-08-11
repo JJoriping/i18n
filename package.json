@@ -1,6 +1,6 @@
 {
   "name": "@daldalso/i18next",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Yet another internationalization library for Next.js",
   "main": "dist/index.js",
   "repository": {

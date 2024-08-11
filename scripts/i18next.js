@@ -1,10 +1,14 @@
+#!/usr/bin/env node
 const { default: inquirer } = require("inquirer");
 const { existsSync, mkdirSync, readdirSync, writeFileSync, readFileSync } = require("fs");
 const { resolve } = require("path");
 
 const cwd = process.cwd();
-const loaderExample = readFileSync(resolve(__dirname, "../res/loader.example.ts")).toString();
+const clientI18nInitializerExample = readFileSync(resolve(__dirname, "../res/client-i18n-initializer.example.ts")).toString();
+const i18nInitializerExample = readFileSync(resolve(__dirname, "../res/i18n-initializer.example.tsx")).toString();
+const i18nModuleLoaderExample = readFileSync(resolve(__dirname, "../res/i18n-module-loader.example.ts")).toString();
 const lexiconExample = readFileSync(resolve(__dirname, "../res/lexicon.example.ts")).toString();
+const loaderExample = readFileSync(resolve(__dirname, "../res/loader.example.ts")).toString();
 let nextConfig;
 
 async function main(){
@@ -54,6 +58,10 @@ async function init(){
   }else{
     mkdirSync(path);
   }
+  mkdirSync(resolve(path, "lib"));
+  writeFileSync(resolve(path, "lib/client-i18n-initializer.ts"), clientI18nInitializerExample);
+  writeFileSync(resolve(path, "lib/i18n-initializer.tsx"), i18nInitializerExample);
+  writeFileSync(resolve(path, "lib/i18n-module-loader.ts"), i18nModuleLoaderExample);
   console.log(`Initialization finished to: ${path}`);
   add("l.example");
 }
@@ -88,7 +96,7 @@ async function add(prefix){
     if(!existsSync(resolve(path, v))){
       mkdirSync(resolve(path, v));
     }
-    writeFileSync(resolve(path, v, lexiconPath), lexiconExample.replace(/LOCALE/g, v));
+    writeFileSync(resolve(path, v, lexiconPath), lexiconExample);
   }
   console.log(`Added: ${prefix}.ts`);
 }
