@@ -7,14 +7,11 @@ const cwd = process.cwd();
 const clientI18nInitializerExample = readFileSync(resolve(__dirname, "../res/client-i18n-initializer.example.ts")).toString();
 const i18nInitializerExample = readFileSync(resolve(__dirname, "../res/i18n-initializer.example.tsx")).toString();
 const i18nModuleLoaderExample = readFileSync(resolve(__dirname, "../res/i18n-module-loader.example.ts")).toString();
+const i18nConfigExample = readFileSync(resolve(__dirname, "../res/i18n.config.example.cjs")).toString();
 const lexiconExample = readFileSync(resolve(__dirname, "../res/lexicon.example.ts")).toString();
 const loaderExample = readFileSync(resolve(__dirname, "../res/loader.example.ts")).toString();
-let nextConfig;
 
 async function main(){
-  if(!await checkEnvironment()){
-    process.exit(1);
-  }
   const command = process.argv[2] || await inquirer.prompt([{
     type: "list",
     name: "command",
@@ -23,7 +20,7 @@ async function main(){
   }]).then(res => res.command);
   switch(command){
     case "init":
-      init();
+      init(process.argv[3]);
       break;
     case "add":
       add(process.argv[3]);
@@ -34,20 +31,7 @@ async function main(){
       process.exit(1);
   }
 }
-async function checkEnvironment(){
-  const nextConfigPath = readdirSync(cwd).find(v => /^next\.config\..?js$/.test(v));
-  if(!nextConfigPath){
-    console.warn("Next.js config file not found.");
-    return false;
-  }
-  nextConfig = await import(`file:///${resolve(cwd, nextConfigPath)}`).then(res => res.default);
-  if(!nextConfig.i18n?.locales || !nextConfig.i18n?.defaultLocale){
-    console.warn("Please set i18n.locales and i18n.defaultLocale of your Next.js config file.");
-    return false;
-  }
-  return true;
-}
-async function init(){
+async function init(locales){
   const path = existsSync(resolve(cwd, "src")) ? resolve(cwd, "src/i18n") : resolve(cwd, "i18n");
 
   if(existsSync(path)){
@@ -58,6 +42,11 @@ async function init(){
   }else{
     mkdirSync(path);
   }
+  locales ||= await inquirer.prompt([
+    { type: "input", name: "locales", message: "Locales? (comma separated)", default: "en" }
+  ]).then(res => res.locales);
+  locales = toArray(locales);
+  writeFileSync(resolve(cwd, "i18n.config.cjs"), i18nConfigExample.replace(/LOCALES/g, JSON.stringify(locales)));
   mkdirSync(resolve(path, "lib"));
   writeFileSync(resolve(path, "lib/client-i18n-initializer.ts"), clientI18nInitializerExample);
   writeFileSync(resolve(path, "lib/i18n-initializer.tsx"), i18nInitializerExample);
@@ -66,8 +55,9 @@ async function init(){
   add("l.example");
 }
 async function add(prefix){
+  const { locales } = readConfig();
   const path = existsSync(resolve(cwd, "src")) ? resolve(cwd, "src/i18n") : resolve(cwd, "i18n");
-  const defaultLocale = nextConfig.i18n.defaultLocale;
+  const defaultLocale = locales[0];
 
   if(!existsSync(path)){
     console.error(`The directory '${path}' not found.`);
@@ -87,7 +77,7 @@ async function add(prefix){
     .replace(/LOCALE/g, defaultLocale)
     .replace(/PREFIX/g, prefix)
   )
-  for(const v of nextConfig.i18n.locales){
+  for(const v of locales){
     const lexiconPath = resolve(path, v, `${prefix}.${v}.ts`);
     if(existsSync(lexiconPath)){
       console.error(`The file '${lexiconPath}' already exists!`);
@@ -101,3 +91,15 @@ async function add(prefix){
   console.log(`Added: ${prefix}.ts`);
 }
 main();
+
+function readConfig(){
+  const configPath = readdirSync(cwd).find(v => /^i18n\.config\.c?js$/.test(v));
+  if(!configPath){
+    console.error(`Configuration file not found.`);
+    process.exit(1);
+  }
+  return require(resolve(cwd, configPath));
+}
+function toArray(string){
+  return string.split(",").map(v => v.trim());
+}

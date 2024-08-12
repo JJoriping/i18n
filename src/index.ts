@@ -1,2 +1,2 @@
 export { default as useLexicon } from "./use-lexicon";
-export { default as I18Next } from "./core";
+export { default as I18n } from "./core";

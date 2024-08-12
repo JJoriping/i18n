@@ -1,11 +1,11 @@
 import React from "react";
 import { type Context, type Lexicon, loadingStateSymbol, loadingTaskSymbol, ModuleLoader, prefixSymbol } from "./types";
 
-export default class I18Next{
+export default class I18n{
   public static context:React.Context<Context>;
   public static initialized:boolean = false;
   public static get lexiconPrefixes():string[]{
-    return Array.from(I18Next.loadedLexicons.keys());
+    return Array.from(I18n.loadedLexicons.keys());
   }
   
   private static readonly loadedLexicons = new Map<string, Lexicon>();
@@ -14,8 +14,8 @@ export default class I18Next{
   }
 
   public static async initialize(moduleLoader:ModuleLoader):Promise<void>{
-    I18Next.global.i18nextModuleLoader = moduleLoader;
-    I18Next.global.i18nextGlobalLexicon ||= {};
+    I18n.global.i18nModuleLoader = moduleLoader;
+    I18n.global.i18nGlobalLexicon ||= {};
   }
   public static useContext(...lexicons:Lexicon[]):Context{
     const tasks:Array<Promise<void>> = [];
@@ -29,7 +29,7 @@ export default class I18Next{
       switch(v[loadingStateSymbol]){
         case "pending":
           v[loadingStateSymbol] = "loading";
-          tasks.push(v[loadingTaskSymbol] = I18Next.global.i18nextModuleLoader(prefix)
+          tasks.push(v[loadingTaskSymbol] = I18n.global.i18nModuleLoader(prefix)
             .then(() => {
               v[loadingStateSymbol] = "loaded";
               delete v[loadingTaskSymbol];
@@ -54,23 +54,23 @@ export default class I18Next{
     lexicon:T
   ):T{
     for(const [ k, $v ] of Object.entries(lexicon)){
-      Object.assign(I18Next.global.i18nextGlobalLexicon, { [k]: $v });
+      Object.assign(I18n.global.i18nGlobalLexicon, { [k]: $v });
     }
     return lexicon;
   }
   public static retrieve(key:string, args:any[]):any{
-    let R = I18Next.global.i18nextGlobalLexicon[key];
+    let R = I18n.global.i18nGlobalLexicon[key];
     if(R === undefined){
       throw Error(`Unknown key: ${key}`);
     }
     if(typeof R === "function"){
-      R = R.apply(I18Next.global.i18nextGlobalLexicon, args);
+      R = R.apply(I18n.global.i18nGlobalLexicon, args);
     }
     return R;
   }
   public static load<T extends Lexicon>(prefix:string):T{
     const R = { [prefixSymbol]: prefix, [loadingStateSymbol]: "pending" as const };
-    I18Next.loadedLexicons.set(prefix, R);
+    I18n.loadedLexicons.set(prefix, R);
     return R as T;
   }
 }

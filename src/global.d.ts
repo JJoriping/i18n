@@ -1,6 +1,6 @@
 import { Lexicon, ModuleLoader } from "./types";
 
 declare global{
-  var i18nextModuleLoader:ModuleLoader;
-  var i18nextGlobalLexicon:Lexicon;
+  var i18nModuleLoader:ModuleLoader;
+  var i18nGlobalLexicon:Lexicon;
 }
