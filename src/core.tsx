@@ -1,13 +1,11 @@
-import React from "react";
-import { type Context, type Lexicon, loadingStateSymbol, loadingTaskSymbol, ModuleLoader, prefixSymbol } from "./types";
+import type { ModuleLoader } from "./types";
+import { type Lexicon, loadingStateSymbol, loadingTaskSymbol, prefixSymbol } from "./types";
 
 export default class I18n{
-  public static context:React.Context<Context>;
-  public static initialized:boolean = false;
   public static get lexiconPrefixes():string[]{
     return Array.from(I18n.loadedLexicons.keys());
   }
-  
+
   private static readonly loadedLexicons = new Map<string, Lexicon>();
   private static get global():typeof globalThis{
     return typeof window === "undefined" ? global : window;
@@ -17,7 +15,7 @@ export default class I18n{
     I18n.global.i18nModuleLoader = moduleLoader;
     I18n.global.i18nGlobalLexicon ||= {};
   }
-  public static useContext(...lexicons:Lexicon[]):Context{
+  public static loadLexicons(...lexicons:Lexicon[]):void{
     const tasks:Array<Promise<void>> = [];
 
     for(const v of lexicons){
@@ -46,9 +44,9 @@ export default class I18n{
       }
     }
     if(tasks.length){
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw Promise.all(tasks);
     }
-    return {};
   }
   public static register<const T extends Lexicon>(
     lexicon:T

@@ -22,8 +22,6 @@ export type LFunction<T extends readonly Lexicon[]> = <K extends T extends reado
   ? R
   : MergedLexicon<T>[K]
 ;
-export type Context = {
-};
 export type I18nInitializerProps = {
   locale: string
 };

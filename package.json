@@ -1,6 +1,6 @@
 {
   "name": "@daldalso/i18n",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Yet another internationalization library for React.js",
   "main": "dist/index.js",
   "repository": {
@@ -10,7 +10,8 @@
   "license": "MIT",
   "scripts": {
     "watch": "tsc -w",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "eslint ./src"
   },
   "files": [
     "/LICENSE",
@@ -23,7 +24,9 @@
     "i18n": "./scripts/i18n.js"
   },
   "devDependencies": {
+    "@daldalso/eslint-plugin": "^1.2.3",
     "@types/react": "^18.3.3",
+    "eslint": "^9.9.0",
     "typescript": "^5.5.4"
   },
   "dependencies": {
