@@ -2,6 +2,7 @@
 const { default: inquirer } = require("inquirer");
 const { existsSync, mkdirSync, readdirSync, writeFileSync, readFileSync } = require("fs");
 const { resolve } = require("path");
+const { log, error, success } = require("@daldalso/logger");
 
 const cwd = process.cwd();
 const clientI18nInitializerExample = readFileSync(resolve(__dirname, "../res/client-i18n-initializer.example.ts")).toString();
@@ -26,8 +27,8 @@ async function main(){
       add(process.argv[3]);
       break;
     default:
-      console.error(`Unknown command: ${command}`);
-      console.log("Running without any commands lets you choose available commands.");
+      error(`Unknown command: ${command}`);
+      log("Running without any commands lets you choose available commands.");
       process.exit(1);
   }
 }
@@ -36,7 +37,7 @@ async function init(locales){
 
   if(existsSync(path)){
     if(readdirSync(path).length){
-      console.error(`The directory '${path}' must be empty.`);
+      error(`The directory '${path}' must be empty.`);
       process.exit(1);
     }
   }else{
@@ -51,7 +52,7 @@ async function init(locales){
   writeFileSync(resolve(path, "lib/client-i18n-initializer.ts"), clientI18nInitializerExample);
   writeFileSync(resolve(path, "lib/i18n-initializer.tsx"), i18nInitializerExample);
   writeFileSync(resolve(path, "lib/i18n-module-loader.ts"), i18nModuleLoaderExample);
-  console.log(`Initialization finished to: ${path}`);
+  success(`Initialization finished to: ${path}`);
   add("l.example");
 }
 async function add(prefix){
@@ -60,7 +61,7 @@ async function add(prefix){
   const defaultLocale = locales[0];
 
   if(!existsSync(path)){
-    console.error(`The directory '${path}' not found.`);
+    error(`The directory '${path}' not found.`);
     process.exit(1);
   }
   prefix ||= await inquirer.prompt([
@@ -69,7 +70,7 @@ async function add(prefix){
   const loaderPath = resolve(path, `${prefix}.ts`);
 
   if(existsSync(loaderPath)){
-    console.error(`The file '${loaderPath}' already exists!`);
+    error(`The file '${loaderPath}' already exists!`);
     process.exit(1);
   }
   writeFileSync(resolve(path, `${prefix}.ts`), loaderExample
@@ -80,7 +81,7 @@ async function add(prefix){
   for(const v of locales){
     const lexiconPath = resolve(path, v, `${prefix}.${v}.ts`);
     if(existsSync(lexiconPath)){
-      console.error(`The file '${lexiconPath}' already exists!`);
+      error(`The file '${lexiconPath}' already exists!`);
       process.exit(1);
     }
     if(!existsSync(resolve(path, v))){
@@ -88,14 +89,14 @@ async function add(prefix){
     }
     writeFileSync(resolve(path, v, lexiconPath), lexiconExample);
   }
-  console.log(`Added: ${prefix}.ts`);
+  success(`Added: ${prefix}.ts`);
 }
 main();
 
 function readConfig(){
   const configPath = readdirSync(cwd).find(v => /^i18n\.config\.c?js$/.test(v));
   if(!configPath){
-    console.error(`Configuration file not found.`);
+    error(`Configuration file not found.`);
     process.exit(1);
   }
   return require(resolve(cwd, configPath));
