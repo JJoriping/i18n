@@ -2,20 +2,37 @@ import type { ModuleLoader } from "./types";
 import { type Lexicon, loadingStateSymbol, loadingTaskSymbol, prefixSymbol } from "./types";
 
 export default class I18n{
+  private static readonly loadedLexicons = new Map<string, Lexicon>();
+  private static initializationTask?:Promise<void> = new Promise<void>(res => {
+    I18n.onInitialized = res;
+  });
+  private static onInitialized:() => void;
+
   public static get lexiconPrefixes():string[]{
     return Array.from(I18n.loadedLexicons.keys());
   }
-
-  private static readonly loadedLexicons = new Map<string, Lexicon>();
   private static get global():typeof globalThis{
     return typeof window === "undefined" ? global : window;
   }
 
-  public static async initialize(moduleLoader:ModuleLoader):Promise<void>{
+  public static initialize(moduleLoader:ModuleLoader):void{
     I18n.global.i18nModuleLoader = moduleLoader;
     I18n.global.i18nGlobalLexicon ||= {};
+    if(I18n.initializationTask){
+      I18n.onInitialized();
+      delete I18n.initializationTask;
+    }
+  }
+  public static load<T extends Lexicon>(prefix:string):T{
+    const R = { [prefixSymbol]: prefix, [loadingStateSymbol]: "pending" as const };
+    I18n.loadedLexicons.set(prefix, R);
+    return R as T;
   }
   public static loadLexicons(...lexicons:Lexicon[]):void{
+    if(I18n.initializationTask){
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
+      throw I18n.initializationTask;
+    }
     const tasks:Array<Promise<void>> = [];
 
     for(const v of lexicons){
@@ -65,10 +82,5 @@ export default class I18n{
       R = R.apply(I18n.global.i18nGlobalLexicon, args);
     }
     return R;
-  }
-  public static load<T extends Lexicon>(prefix:string):T{
-    const R = { [prefixSymbol]: prefix, [loadingStateSymbol]: "pending" as const };
-    I18n.loadedLexicons.set(prefix, R);
-    return R as T;
   }
 }

@@ -30,7 +30,7 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
-    "@daldalso/logger": "^0.8.0-beta.2",
+    "@daldalso/logger": "^0.9.0",
     "inquirer": "^10.1.8",
     "react": "^18"
   }
