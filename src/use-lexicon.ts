@@ -1,10 +1,13 @@
-import { useCallback } from "react";
-import type { LFunction, Lexicon } from "./types";
 import I18n from "./core";
+import type { LFunction, Lexicon, Lexiconista } from "./types";
 
-const useLexicon = <T extends readonly Lexicon[]>(...lexicons:T) => {
-  I18n.loadLexicons(...lexicons);
-  const l = useCallback<LFunction<T>>((key, ...args) => I18n.retrieve(key, args), []);
+type LexiconsOf<T extends ReadonlyArray<Lexiconista<Lexicon>>> = T extends [ Lexiconista<infer R>, ...infer Rest extends ReadonlyArray<Lexiconista<Lexicon>> ]
+  ? [ R, ...LexiconsOf<Rest> ]
+  : []
+;
+const useLexicon = <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:T) => {
+  I18n.loadLexicons(...lexiconistas);
+  const l = I18n.currentInstance.retrieve.bind(I18n.currentInstance) as LFunction<LexiconsOf<T>>;
 
   return { l };
 };

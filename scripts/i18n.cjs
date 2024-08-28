@@ -2,6 +2,7 @@
 const { default: inquirer } = require("inquirer");
 const { existsSync, mkdirSync, readdirSync, writeFileSync, readFileSync } = require("fs");
 const { resolve } = require("path");
+// TODO ESM
 const { log, error, success } = require("@daldalso/logger");
 
 const cwd = process.cwd();
@@ -10,7 +11,7 @@ const i18nInitializerExample = readFileSync(resolve(__dirname, "../res/i18n-init
 const i18nModuleLoaderExample = readFileSync(resolve(__dirname, "../res/i18n-module-loader.example.ts")).toString();
 const i18nConfigExample = readFileSync(resolve(__dirname, "../res/i18n.config.example.cjs")).toString();
 const lexiconExample = readFileSync(resolve(__dirname, "../res/lexicon.example.ts")).toString();
-const loaderExample = readFileSync(resolve(__dirname, "../res/loader.example.ts")).toString();
+const lexiconistaExample = readFileSync(resolve(__dirname, "../res/lexiconista.example.ts")).toString();
 
 async function main(){
   const command = process.argv[2] || await inquirer.prompt([{
@@ -33,7 +34,8 @@ async function main(){
   }
 }
 async function init(locales){
-  const path = existsSync(resolve(cwd, "src")) ? resolve(cwd, "src/i18n") : resolve(cwd, "i18n");
+  const hasSrc = resolve(cwd, "src");
+  const path = existsSync(hasSrc) ? resolve(cwd, "src/i18n") : resolve(cwd, "i18n");
 
   if(existsSync(path)){
     if(readdirSync(path).length){
@@ -51,7 +53,7 @@ async function init(locales){
   mkdirSync(resolve(path, "lib"));
   writeFileSync(resolve(path, "lib/client-i18n-initializer.ts"), clientI18nInitializerExample);
   writeFileSync(resolve(path, "lib/i18n-initializer.tsx"), i18nInitializerExample);
-  writeFileSync(resolve(path, "lib/i18n-module-loader.ts"), i18nModuleLoaderExample);
+  writeFileSync(resolve(path, "lib/i18n-module-loader.ts"), i18nModuleLoaderExample.replace(/CONFIG_IMPORT_SOURCE/g, hasSrc ? "../../../i18n.config.cjs" : "../../i18n.config.cjs"));
   success(`Initialization finished to: ${path}`);
   add("l.example");
 }
@@ -73,11 +75,11 @@ async function add(prefix){
     error(`The file '${loaderPath}' already exists!`);
     process.exit(1);
   }
-  writeFileSync(resolve(path, `${prefix}.ts`), loaderExample
+  writeFileSync(resolve(path, `${prefix}.ts`), lexiconistaExample
     .replace(/CAPITALIZED_LOCALE/g, defaultLocale[0].toUpperCase() + defaultLocale.slice(1))
     .replace(/LOCALE/g, defaultLocale)
     .replace(/PREFIX/g, prefix)
-  )
+  );
   for(const v of locales){
     const lexiconPath = resolve(path, v, `${prefix}.${v}.ts`);
     if(existsSync(lexiconPath)){

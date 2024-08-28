@@ -6,9 +6,12 @@ export const loadingTaskSymbol = Symbol("loading task");
 
 export type ModuleLoader = (prefix:string) => Promise<{ default: Lexicon }>;
 export type Lexicon = Readonly<Record<string, ReactNode|((...args:any[]) => ReactNode)>>&{
-  [prefixSymbol]?: string,
   [loadingStateSymbol]?: "pending"|"loading"|"loaded"|Error,
   [loadingTaskSymbol]?: Promise<void>
+};
+export type Lexiconista<T extends Lexicon> = {
+  'prefix': string,
+  'lexicons': Record<string, T>
 };
 export type MergedLexicon<T extends readonly Lexicon[]> = T extends [ infer R, ...infer Rest extends readonly Lexicon[] ]
   ? R&MergedLexicon<Rest>

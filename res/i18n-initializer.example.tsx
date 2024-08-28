@@ -5,7 +5,7 @@ import ClientI18nInitializer from "./client-i18n-initializer";
 import i18nModuleLoader from "./i18n-module-loader";
 
 const I18nInitializer = (props:I18nInitializerProps) => {
-  I18n.initialize(i18nModuleLoader(props.locale));
+  I18n.initialize(props.locale, i18nModuleLoader(props.locale));
   return <ClientI18nInitializer {...props} />;
 };
 export default I18nInitializer;
