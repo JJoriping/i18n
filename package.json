@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "@daldalso/i18n",
   "version": "0.9.3-beta.0",
   "description": "Yet another internationalization library for React.js",
@@ -17,11 +18,10 @@
     "/LICENSE",
     "/README.md",
     "/dist/",
-    "/scripts/",
     "/res/"
   ],
   "bin": {
-    "i18n": "./scripts/i18n.cjs"
+    "i18n": "./dist/bin.js"
   },
   "devDependencies": {
     "@daldalso/eslint-plugin": "^1.2.3",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@daldalso/logger": "^0.9.0",
-    "inquirer": "^10.1.8",
+    "@inquirer/prompts": "^5.3.8",
     "react": "^18"
   }
 }

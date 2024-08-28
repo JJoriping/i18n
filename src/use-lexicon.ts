@@ -1,5 +1,5 @@
-import I18n from "./core";
-import type { LFunction, Lexicon, Lexiconista } from "./types";
+import I18n from "./core.js";
+import type { LFunction, Lexicon, Lexiconista } from "./types.js";
 
 type LexiconsOf<T extends ReadonlyArray<Lexiconista<Lexicon>>> = T extends [ Lexiconista<infer R>, ...infer Rest extends ReadonlyArray<Lexiconista<Lexicon>> ]
   ? [ R, ...LexiconsOf<Rest> ]

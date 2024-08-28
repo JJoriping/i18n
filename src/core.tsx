@@ -1,6 +1,6 @@
 /* eslint-disable @daldalso/sort-keys */
-import type { Lexiconista, ModuleLoader } from "./types";
-import { type Lexicon, loadingStateSymbol, loadingTaskSymbol, prefixSymbol } from "./types";
+import type { Lexiconista, ModuleLoader } from "./types.js";
+import { type Lexicon, loadingStateSymbol, loadingTaskSymbol } from "./types.js";
 
 export default class I18n{
   private static readonly instanceLoadingTask = new Promise<void>(res => {

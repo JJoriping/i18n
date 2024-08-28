@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-export const prefixSymbol = Symbol("prefix");
 export const loadingStateSymbol = Symbol("loading state");
 export const loadingTaskSymbol = Symbol("loading task");
 
