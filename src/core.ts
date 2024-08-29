@@ -32,15 +32,42 @@ export default class I18n{
   ):T{
     return lexicon;
   }
+  public static detectHMR(m:NodeModule, x:object, r:Function):void{
+    if(typeof window === "undefined") return;
 
-  private readonly locale:string;
-  private readonly mergedLexicon:Lexicon;
+    // For Next.js Pages Router
+    const webpackHotUpdateKey = Object.keys(window).find(k => k.startsWith("webpackHotUpdate")) as `webpackHotUpdate${string}`|undefined;
+    if(!webpackHotUpdateKey) return;
+    window[`${webpackHotUpdateKey}-original`] ||= window[webpackHotUpdateKey];
+    window[webpackHotUpdateKey] = (chunkId, moreModules, runtime) => {
+      const affectedLexiconista = Object.entries(I18n.currentInstance.loadedLexiconistas)
+        .find(e => chunkId.includes(e[0].slice(2).replace(/\W/g, "_")))
+      ;
+      if(affectedLexiconista){
+        for(const v of Object.values(moreModules)){
+          v(m, x, r);
+          I18n.currentInstance.mergeLexicon((x as any)['default']);
+          affectedLexiconista[1].onReload?.();
+        }
+      }
+      // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
+      return window[`${webpackHotUpdateKey}-original`](chunkId, moreModules, runtime);
+    };
+  }
+
+  public readonly locale:string;
+  public readonly loadedLexiconistas:Record<string, Lexiconista<Lexicon>>;
   private readonly moduleLoader:ModuleLoader;
+  private readonly mergedLexicon:Lexicon;
 
   private constructor(locale:string, moduleLoader:ModuleLoader){
     this.locale = locale;
+    this.loadedLexiconistas = {};
     this.moduleLoader = moduleLoader;
     this.mergedLexicon = {};
+  }
+  public mergeLexicon(lexicon:Lexicon):void{
+    Object.assign(this.mergedLexicon, lexicon);
   }
   public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):void{
     const tasks:Array<Promise<void>> = [];
@@ -55,12 +82,11 @@ export default class I18n{
           lexicon[loadingStateSymbol] = "loading";
           tasks.push(lexicon[loadingTaskSymbol] = this.moduleLoader(v.prefix)
             .then(res => {
-              Object.assign(this.mergedLexicon, res.default);
+              this.loadedLexiconistas[res.href] = v;
+              this.mergeLexicon(res.default);
               lexicon[loadingStateSymbol] = "loaded";
-              delete lexicon[loadingTaskSymbol];
-            })
-            .catch(error => {
-              lexicon[loadingStateSymbol] = error instanceof Error ? error : new Error(error);
+            }, error => {
+              lexicon[loadingStateSymbol] = error instanceof Error ? error : new Error(String(error));
             })
             .then(() => {
               delete lexicon[loadingTaskSymbol];

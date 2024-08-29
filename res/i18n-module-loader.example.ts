@@ -5,5 +5,8 @@ export default function(locale:string):(prefix:string) => Promise<any>{
     console.warn(`Unknown locale: ${locale}`);
     return async () => {};
   }
-  return prefix => import(`../${locale}/${prefix}.${locale}`);
+  return async prefix => Object.assign(
+    await import(`../${locale}/${prefix}.${locale}`),
+    { href: `../${locale}/${prefix}.${locale}` }
+  );
 }
