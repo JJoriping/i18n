@@ -6,9 +6,9 @@ import { useEffect, type FC } from "react";
 import i18nModuleLoader from "./i18n-module-loader";
 
 const hmrDetector = process.env.NODE_ENV === "development"
-? () => useEffect(() => {
+  ? () => useEffect(() => {
     // @ts-expect-error
-    if(typeof module !== "undefined" && typeof __webpack_exports__ !== "undefined" && typeof __webpack_require__ !== "undefined") I18n.detectHMR(module, __webpack_exports__, __webpack_require__);
+    if(typeof module !== "undefined" && typeof __webpack_exports__ !== "undefined" && typeof __webpack_require__ !== "undefined") I18n.detectClientHMR(module, __webpack_exports__, __webpack_require__);
   }, [])
   : () => {}
 ;
