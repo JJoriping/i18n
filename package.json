@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@daldalso/i18n",
-  "version": "0.9.3-beta.0",
+  "version": "0.9.4-0",
   "description": "Yet another internationalization library for React.js",
   "main": "dist/index.js",
   "repository": {
@@ -32,7 +32,7 @@
     "unistore": "^3.5.2"
   },
   "dependencies": {
-    "@daldalso/logger": "^0.9.2",
+    "@daldalso/logger": "^0.9.3-0",
     "@inquirer/prompts": "^5.3.8"
   },
   "peerDependencies": {
