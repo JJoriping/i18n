@@ -35,7 +35,9 @@ export default class I18n{
   }
   public static async detectServerHMR(context:{ 'locale': string, 'r': Webpack.Require }):Promise<any>{
     if(typeof window !== "undefined") return;
+    if(global.destructI18nServerHMR === null) return;
     global.destructI18nServerHMR?.();
+    global.destructI18nServerHMR = null!;
     const cwd = process.cwd();
     const { resolve, relative } = await import(/* webpackIgnore: true */ "node:path");
     const { watch, existsSync } = await import(/* webpackIgnore: true */ "node:fs");
