@@ -77,7 +77,7 @@ export default class I18n{
           let nextJsChunkPath = resolve(cwd, ".next/server", `${v.replace(/\W/g, "_")}.js`);
           const nextJsChunkPathRear = nextJsChunkPath.split(/[/\\]/).at(-1)!;
           if(isAppRouter) nextJsChunkPath = nextJsChunkPath.replace(nextJsChunkPathRear, `_ssr_${nextJsChunkPathRear}`);
-          const nextJsChunk = await import(/* webpackIgnore: true */ `file:${nextJsChunkPath}`);
+          const nextJsChunk = await import(/* webpackIgnore: true */ `file:${nextJsChunkPath}?${Date.now()}`);
 
           context.r.f.require(nextJsChunk, null, true);
           for(const l in nextJsChunk['modules']){
