@@ -3,12 +3,9 @@ import { log, warning } from "@daldalso/logger";
 import type { Lexicon, Lexiconista, ModuleLoader, Webpack } from "./types.js";
 
 export default class I18n{
-  private static readonly instanceLoadingTask = new Promise<void>(res => {
-    I18n.onInstanceLoaded = res;
-  });
   private static readonly instances:Record<string, I18n> = {};
   public static currentInstance:I18n;
-  private static onInstanceLoaded:() => void;
+  private static onInstanceLoaded?:() => void;
   private static serverHMRTargets:Record<string, string> = {};
 
   public static createLexiconista<T extends Lexicon>(prefix:string):Lexiconista<T>{
@@ -18,13 +15,16 @@ export default class I18n{
     const R = I18n.instances[locale] ||= new I18n(locale, moduleLoader);
 
     I18n.currentInstance = R;
-    I18n.onInstanceLoaded();
+    I18n.onInstanceLoaded?.();
+    delete I18n.onInstanceLoaded;
     return R;
   }
   public static loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):void{
     if(!I18n.currentInstance){
       // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw I18n.instanceLoadingTask;
+      throw new Promise<void>(res => {
+        I18n.onInstanceLoaded = res;
+      });
     }
     I18n.currentInstance.loadLexicons(...lexiconistas);
   }
