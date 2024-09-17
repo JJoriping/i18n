@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-export type ModuleOutput = { 'default': (ref:{ 'current': Lexicon }) => null, 'href': string };
-export type ModuleLoader = (prefix:string) => Promise<ModuleOutput>;
+export type ModuleOutput<T extends Lexicon> = { 'default': (ref:{ 'current': T }) => null, 'href': string };
+export type ModuleLoader = (prefix:string) => Promise<ModuleOutput<Lexicon>>;
 export type Lexicon = Readonly<Record<string, ReactNode|((...args:any[]) => ReactNode)>>;
 export type Lexiconista<T extends Lexicon> = {
   'prefix': string,

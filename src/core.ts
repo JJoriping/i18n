@@ -8,7 +8,7 @@ export default class I18n{
   private static onInstanceLoaded?:() => void;
   private static serverHMRTargets:Record<string, string> = {};
 
-  public static createLexiconista<T extends Lexicon>(prefix:string):Lexiconista<T>{
+  public static createLexiconista<T extends ModuleOutput<any>['default']>(prefix:string):Lexiconista<T extends ModuleOutput<infer R>['default'] ? R : never>{
     return { prefix, lexicons: {} };
   }
   public static initialize(locale:string, moduleLoader:ModuleLoader):I18n{
@@ -30,8 +30,9 @@ export default class I18n{
   }
   public static register<const T extends Lexicon>(
     lexicon:T
-  ):ModuleOutput['default']{
-    // NOTE Since Next.js HMR wraps a lexicon into a lazy-loading component which causes an error, we wrap the lexicon in a function component.
+  ):ModuleOutput<T>['default']{
+    // NOTE Since Next.js HMR wraps a lexicon into a lazy-loading component which causes an error,
+    //      we wrap the lexicon in a function component.
     return ref => {
       ref.current = lexicon;
       return null;
@@ -119,7 +120,7 @@ export default class I18n{
           for(const v of Object.values(moreModules)){
             v(m, x, r);
             r.c[v.name].hot.accept();
-            I18n.currentInstance.mergeLexicon((x as ModuleOutput).default);
+            I18n.currentInstance.mergeLexicon((x as ModuleOutput<Lexicon>).default);
             affectedLexiconista[1].onReload?.();
           }
         }
@@ -140,7 +141,7 @@ export default class I18n{
     this.moduleLoader = moduleLoader;
     this.mergedLexicon = {};
   }
-  private mergeLexicon(wrappedLexicon:ModuleOutput['default']):void{
+  private mergeLexicon(wrappedLexicon:ModuleOutput<Lexicon>['default']):void{
     const ref = { current: null! as Lexicon };
     wrappedLexicon(ref);
     Object.assign(this.mergedLexicon, ref.current);
@@ -174,7 +175,7 @@ export default class I18n{
   public retrieve(key:string, ...args:any[]):any{
     let R = this.mergedLexicon[key];
     if(R === undefined){
-      throw Error(`Unknown key: ${key}`);
+      return `<<${key}>>`;
     }
     if(typeof R === "function"){
       R = R.apply(this.mergedLexicon, args);
