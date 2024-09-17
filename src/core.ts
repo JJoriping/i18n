@@ -1,6 +1,6 @@
 /* eslint-disable @daldalso/sort-keys */
 import { log, warning } from "@daldalso/logger";
-import type { Lexicon, Lexiconista, ModuleLoader, Webpack } from "./types.js";
+import type { Lexicon, Lexiconista, ModuleLoader, ModuleOutput, Webpack } from "./types.js";
 
 export default class I18n{
   private static readonly instances:Record<string, I18n> = {};
@@ -30,8 +30,12 @@ export default class I18n{
   }
   public static register<const T extends Lexicon>(
     lexicon:T
-  ):T{
-    return lexicon;
+  ):ModuleOutput['default']{
+    // NOTE Since Next.js HMR wraps a lexicon into a lazy-loading component which causes an error, we wrap the lexicon in a function component.
+    return ref => {
+      ref.current = lexicon;
+      return null;
+    };
   }
   public static async detectServerHMR(context:{ 'locale': string, 'r': Webpack.Require }):Promise<any>{
     if(typeof window !== "undefined") return;
@@ -86,7 +90,7 @@ export default class I18n{
             const fakeModule:NodeModule = { exports: {} } as NodeModule;
             context.r.m[l](fakeModule, fakeModule.exports, context.r);
             const lexicon = await (fakeModule.exports as ReturnType<typeof instance.moduleLoader>);
-            instance.mergeLexicon(lexicon.default);
+            instance?.mergeLexicon(lexicon.default);
           }
         }
         log("I18n file updated", ...entries.map(v => v[0]));
@@ -114,7 +118,8 @@ export default class I18n{
         if(affectedLexiconista){
           for(const v of Object.values(moreModules)){
             v(m, x, r);
-            I18n.currentInstance.mergeLexicon((x as any)['default']);
+            r.c[v.name].hot.accept();
+            I18n.currentInstance.mergeLexicon((x as ModuleOutput).default);
             affectedLexiconista[1].onReload?.();
           }
         }
@@ -135,8 +140,10 @@ export default class I18n{
     this.moduleLoader = moduleLoader;
     this.mergedLexicon = {};
   }
-  public mergeLexicon(lexicon:Lexicon):void{
-    Object.assign(this.mergedLexicon, lexicon);
+  private mergeLexicon(wrappedLexicon:ModuleOutput['default']):void{
+    const ref = { current: null! as Lexicon };
+    wrappedLexicon(ref);
+    Object.assign(this.mergedLexicon, ref.current);
   }
   public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):void{
     const tasks:Array<Promise<void>> = [];

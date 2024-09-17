@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
-export type ModuleLoader = (prefix:string) => Promise<{ 'default': Lexicon, 'href': string }>;
+export type ModuleOutput = { 'default': (ref:{ 'current': Lexicon }) => null, 'href': string };
+export type ModuleLoader = (prefix:string) => Promise<ModuleOutput>;
 export type Lexicon = Readonly<Record<string, ReactNode|((...args:any[]) => ReactNode)>>;
 export type Lexiconista<T extends Lexicon> = {
   'prefix': string,
@@ -30,6 +31,7 @@ export namespace Webpack{
     'f': {
       'require': (chunkId:string, promises?:unknown, injected?:boolean) => unknown
     },
-    'C': (script:string) => unknown
+    'C': (script:string) => unknown,
+    'c': Record<string, NodeModule&{hot: {accept: () => void}}>
   };
 }
