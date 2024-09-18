@@ -38,6 +38,18 @@ export default class I18n{
       return null;
     };
   }
+  public static async retrieve<const T extends Lexicon, U extends keyof T>(locale:string, lexiconista:Lexiconista<T>, key:U, ...args:any[]):Promise<T[U]>{
+    try{
+      I18n.instances[locale].loadLexicons(lexiconista);
+    }catch(error){
+      if(error instanceof Promise){
+        await error;
+      }else{
+        throw error;
+      }
+    }
+    return I18n.instances[locale].retrieve(key as string, ...args);
+  }
   public static async detectServerHMR(context:{ 'locale': string, 'r': Webpack.Require }):Promise<any>{
     if(typeof window !== "undefined") return;
     if(global.destructI18nServerHMR === null) return;
@@ -113,6 +125,7 @@ export default class I18n{
       if(!webpackHotUpdateKey) return;
       window[`${webpackHotUpdateKey}-original`] ||= window[webpackHotUpdateKey];
       window[webpackHotUpdateKey] = (chunkId, moreModules, runtime) => {
+        // TODO Update instance with its locale
         const affectedLexiconista = Object.entries(I18n.currentInstance.loadedLexiconistas)
           .find(e => chunkId.includes(e[0].slice(2).replace(/\W/g, "_")))
         ;
