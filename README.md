@@ -5,4 +5,4 @@ Yet another internationalization library for React.js
 1. `yarn add @daldalso/i18n`
 2. `npx i18n init`
 3. Add `I18nInitializer` component in your root component. `I18nInitializer` have to be the first child.
-4. Call `useLexicon` in any components for i18n.
+4. Call `lexicon` in any components for i18n.

@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@daldalso/i18n",
-  "version": "0.9.4-7",
+  "version": "0.9.5-0",
   "description": "Yet another internationalization library for React.js",
   "main": "dist/index.js",
   "repository": {
