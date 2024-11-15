@@ -28,6 +28,14 @@ export default class I18n{
     }
     I18n.currentInstance.loadLexicons(...lexiconistas);
   }
+  public static async loadLexiconsAsync(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<void>{
+    if(!I18n.currentInstance){
+      await new Promise<void>(res => {
+        I18n.onInstanceLoaded = res;
+      });
+    }
+    this.loadLexicons(...lexiconistas);
+  }
   public static register<const T extends Lexicon>(
     lexicon:T
   ):ModuleOutput<T>['default']{
