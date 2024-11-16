@@ -1,7 +1,8 @@
-import type { Lexicon, ModuleOutput } from "@daldalso/i18n/dist/types";
+import { I18n } from "@daldalso/i18n";
 import config from "../../../i18n.config.cjs";
+import "./lib/i18n-module-loader";
 
-export default function(locale:string):(prefix:string) => Promise<ModuleOutput<Lexicon>>{
+I18n.moduleLoader = locale => {
   if(!config.locales.includes(locale)){
     console.warn(`Unknown locale: ${locale}`);
     return async () => null!;
@@ -10,4 +11,4 @@ export default function(locale:string):(prefix:string) => Promise<ModuleOutput<L
     await import(`../${locale}/${prefix}.${locale}`),
     { href: `../${locale}/${prefix}.${locale}` }
   );
-}
+};

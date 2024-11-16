@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 
+export type I18nInitializerProps = {
+  'locale': string
+};
 export type ModuleOutput<T extends Lexicon> = { 'default': (ref:{ 'current': T }) => null, 'href': string };
 export type ModuleLoader = (prefix:string) => Promise<ModuleOutput<Lexicon>>;
 export type Lexicon = Readonly<Record<string, ReactNode|((...args:any[]) => ReactNode)>>;
@@ -21,9 +24,10 @@ export type LFunction<T extends readonly Lexicon[]> = <K extends T extends reado
   ? R
   : MergedLexicon<T>[K]
 ;
-export type I18nInitializerProps = {
-  locale: string
-};
+export type LexiconsOf<T extends ReadonlyArray<Lexiconista<Lexicon>>> = T extends [ Lexiconista<infer R>, ...infer Rest extends ReadonlyArray<Lexiconista<Lexicon>> ]
+  ? [ R, ...LexiconsOf<Rest> ]
+  : []
+;
 export namespace Webpack{
   export type Loader = (module:NodeModule, exports:object, require:Require) => void;
   export type Require = {

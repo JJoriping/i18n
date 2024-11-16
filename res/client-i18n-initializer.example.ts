@@ -2,8 +2,7 @@
 
 import { I18n } from "@daldalso/i18n";
 import type { I18nInitializerProps } from "@daldalso/i18n/dist/types";
-import { useEffect, type FC } from "react";
-import i18nModuleLoader from "./i18n-module-loader";
+import { useEffect } from "react";
 
 const hmrDetector = process.env.NODE_ENV === "development"
   ? () => useEffect(() => {
@@ -12,8 +11,8 @@ const hmrDetector = process.env.NODE_ENV === "development"
   }, [])
   : () => {}
 ;
-const ClientI18nInitializer:FC<I18nInitializerProps> = ({ locale }) => {
-  I18n.initialize(locale, i18nModuleLoader(locale));
+const ClientI18nInitializer = (props:I18nInitializerProps) => {
+  I18n.initialize(props);
   hmrDetector();
 
   return null;

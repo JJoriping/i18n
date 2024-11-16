@@ -65,3 +65,7 @@ export default function Index(){
   </ul>;
 }
 ```
+
+## Caveat
+You must use `await lexiconAsync(...)` instead of `lexicon(...)` if the execution of your component __precedes__ the execution of `I18nInitializer`.
+This often happens when it's called directly in a page component.

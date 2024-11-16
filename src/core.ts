@@ -1,40 +1,38 @@
 /* eslint-disable @daldalso/sort-keys */
 import { log, warning } from "@daldalso/logger";
-import type { Lexicon, Lexiconista, ModuleLoader, ModuleOutput, Webpack } from "./types.js";
+import type { I18nInitializerProps, Lexicon, Lexiconista, ModuleLoader, ModuleOutput, Webpack } from "./types.js";
 
 export default class I18n{
+  public static locale:string;
+  public static moduleLoaderBuilder:(locale:string) => ModuleLoader;
+
+  private static initializationResolve:(() => void)|null;
+  private static initializationTask:Promise<void>|null = new Promise<void>(res => {
+    I18n.initializationResolve = res;
+  });
   private static readonly instances:Record<string, I18n> = {};
-  public static currentInstance:I18n;
-  private static onInstanceLoaded?:() => void;
   private static serverHMRTargets:Record<string, string> = {};
 
+  public static initialize(props:I18nInitializerProps):void{
+    I18n.locale = props.locale;
+    I18n.initializationTask = null;
+    I18n.initializationResolve?.();
+    I18n.initializationResolve = null;
+  }
   public static createLexiconista<T extends ModuleOutput<any>['default']>(prefix:string):Lexiconista<T extends ModuleOutput<infer R>['default'] ? R : never>{
     return { prefix, lexicons: {} };
   }
-  public static initialize(locale:string, moduleLoader:ModuleLoader):I18n{
-    const R = I18n.instances[locale] ||= new I18n(locale, moduleLoader);
+  public static loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<I18n>|I18n{
+    if(I18n.initializationTask){
+      return I18n.initializationTask.then(() => I18n.loadLexicons(...lexiconistas));
+    }
+    const R = I18n.instances[I18n.locale] ||= new I18n(I18n.locale);
+    const task = R.loadLexicons(...lexiconistas);
 
-    I18n.currentInstance = R;
-    I18n.onInstanceLoaded?.();
-    delete I18n.onInstanceLoaded;
+    if(task){
+      return task.then(() => R);
+    }
     return R;
-  }
-  public static loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):void{
-    if(!I18n.currentInstance){
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw new Promise<void>(res => {
-        I18n.onInstanceLoaded = res;
-      });
-    }
-    I18n.currentInstance.loadLexicons(...lexiconistas);
-  }
-  public static async loadLexiconsAsync(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<void>{
-    if(!I18n.currentInstance){
-      await new Promise<void>(res => {
-        I18n.onInstanceLoaded = res;
-      });
-    }
-    this.loadLexicons(...lexiconistas);
   }
   public static register<const T extends Lexicon>(
     lexicon:T
@@ -46,19 +44,7 @@ export default class I18n{
       return null;
     };
   }
-  public static async retrieve<const T extends Lexicon, U extends keyof T>(locale:string, lexiconista:Lexiconista<T>, key:U, ...args:any[]):Promise<T[U]>{
-    try{
-      I18n.instances[locale].loadLexicons(lexiconista);
-    }catch(error){
-      if(error instanceof Promise){
-        await error;
-      }else{
-        throw error;
-      }
-    }
-    return I18n.instances[locale].retrieve(key as string, ...args);
-  }
-  public static async detectServerHMR(context:{ 'locale': string, 'r': Webpack.Require }):Promise<any>{
+  public static async detectServerHMR(context:{ 'r': Webpack.Require }):Promise<any>{
     if(typeof window !== "undefined") return;
     if(global.destructI18nServerHMR === null) return;
     global.destructI18nServerHMR?.();
@@ -110,7 +96,7 @@ export default class I18n{
           for(const l in nextJsChunk['modules']){
             const fakeModule:NodeModule = { exports: {} } as NodeModule;
             context.r.m[l](fakeModule, fakeModule.exports, context.r);
-            const lexicon = await (fakeModule.exports as ReturnType<typeof instance.moduleLoader>);
+            const lexicon = await (fakeModule.exports as ReturnType<ModuleLoader>);
             instance?.mergeLexicon(lexicon.default);
           }
         }
@@ -134,15 +120,17 @@ export default class I18n{
       window[`${webpackHotUpdateKey}-original`] ||= window[webpackHotUpdateKey];
       window[webpackHotUpdateKey] = (chunkId, moreModules, runtime) => {
         // TODO Update instance with its locale
-        const affectedLexiconista = Object.entries(I18n.currentInstance.loadedLexiconistas)
-          .find(e => chunkId.includes(e[0].slice(2).replace(/\W/g, "_")))
-        ;
-        if(affectedLexiconista){
-          for(const v of Object.values(moreModules)){
-            v(m, x, r);
-            r.c[v.name].hot.accept();
-            I18n.currentInstance.mergeLexicon((x as ModuleOutput<Lexicon>).default);
-            affectedLexiconista[1].onReload?.();
+        for(const v of Object.values(I18n.instances)){
+          const affectedLexiconista = Object.entries(v.loadedLexiconistas)
+            .find(f => chunkId.includes(f[0].slice(2).replace(/\W/g, "_")))
+          ;
+          if(affectedLexiconista){
+            for(const w of Object.values(moreModules)){
+              w(m, x, r);
+              r.c[w.name].hot.accept();
+              v.mergeLexicon((x as ModuleOutput<Lexicon>).default);
+              affectedLexiconista[1].onReload?.();
+            }
           }
         }
         // eslint-disable-next-line @typescript-eslint/no-confusing-void-expression
@@ -156,10 +144,10 @@ export default class I18n{
   private readonly moduleLoader:ModuleLoader;
   private readonly mergedLexicon:Lexicon;
 
-  private constructor(locale:string, moduleLoader:ModuleLoader){
+  private constructor(locale:string){
     this.locale = locale;
     this.loadedLexiconistas = {};
-    this.moduleLoader = moduleLoader;
+    this.moduleLoader = I18n.moduleLoaderBuilder(locale);
     this.mergedLexicon = {};
   }
   private mergeLexicon(wrappedLexicon:ModuleOutput<Lexicon>['default']):void{
@@ -167,7 +155,7 @@ export default class I18n{
     wrappedLexicon(ref);
     Object.assign(this.mergedLexicon, ref.current);
   }
-  public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):void{
+  public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<void[]>|void{
     const tasks:Array<Promise<void>> = [];
     const loadedPrefixes = Object.values(this.loadedLexiconistas).reduce((pv, v) => {
       pv[v.prefix] = true;
@@ -189,8 +177,7 @@ export default class I18n{
       );
     }
     if(tasks.length){
-      // eslint-disable-next-line @typescript-eslint/only-throw-error
-      throw Promise.all(tasks);
+      return Promise.all(tasks);
     }
   }
   public retrieve(key:string, ...args:any[]):any{
