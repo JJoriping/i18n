@@ -1,7 +1,7 @@
 "use client";
 
-import { I18n } from "@daldalso/i18n";
-import type { I18nInitializerProps } from "@daldalso/i18n/dist/types";
+import I18n from "@daldalso/i18n";
+import type { I18nInitializerProps } from "@daldalso/i18n/types";
 import { useEffect } from "react";
 
 const hmrDetector = process.env.NODE_ENV === "development"
