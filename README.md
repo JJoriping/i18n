@@ -1,7 +1,7 @@
 # @daldalso/i18n
 Yet another internationalization library for React.js
 
-<p align="center">English | <a href="README.ko.md">한국어</a></p>
+<p style="text-align: center;">English | <a href="README.ko.md">한국어</a></p>
 
 ## Getting Started
 1. `yarn add @daldalso/i18n`
