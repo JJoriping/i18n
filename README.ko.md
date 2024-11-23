@@ -68,6 +68,6 @@ export default function Index(){
 }
 ```
 
-## 주의사항
+## 주의 사항
 `I18nInitializer`가 실행되기 전에 컴포넌트가 실행되는 경우, `lexicon(...)` 대신 `await lexiconAsync(...)`를 사용해야 합니다. 
 __주로__ 페이지 컴포넌트에서 직접 호출될 때 발생합니다.
