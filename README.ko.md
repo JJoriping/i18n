@@ -26,7 +26,7 @@ Lexicon 파일만 분리해 디렉토리를 구성할 수 있습니다:
   └ sign-up.ts
 ```
 
-### JSX Support
+### JSX 지원
 문자열, JSX 요소, JSX 요소들의 배열, 또는 이를 반환하는 함수도 사용할 수 있습니다.
 ```tsx
 //: src/i18n/en/l.index.en.tsx
