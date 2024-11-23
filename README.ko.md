@@ -1,7 +1,7 @@
 # @daldalso/i18n
 React.js를 위한 국제화(i18n) 라이브러리
 
-<p style="text-align: center;"><a href="README.md">English</a> | 한국어</p>
+<p align="center"><a href="README.md">English</a> | 한국어</p>
 
 ## 시작하기
 1. `yarn add @daldalso/i18n`
