@@ -9,7 +9,7 @@ const lexicon = <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:
     // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw R;
   }
-  if(typeof window !== "undefined"){
+  if(typeof window !== "undefined") try{
     // eslint-disable-next-line react-hooks/rules-of-hooks, react/hook-use-state
     const [ , setCounter ] = useState(0);
 
@@ -18,6 +18,8 @@ const lexicon = <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:
         setCounter(prev => prev + 1);
       };
     }
+  }catch(error){
+    console.warn(error);
   }
   return R.retrieve.bind(R);
 };
