@@ -16,7 +16,7 @@ export type MergedLexicon<T extends readonly Lexicon[]> = T extends [ infer R, .
   ? R&MergedLexicon<Rest>
   : unknown
 ;
-export type LFunction<T extends readonly Lexicon[]> = <K extends T extends readonly [] ? never : Extract<keyof MergedLexicon<T>, string>>(
+export type LFunction<T extends readonly Lexicon[]> = <K extends T extends readonly [] ? never : Extract<keyof MergedLexicon<T>, number|string>>(
   ...args:MergedLexicon<T>[K] extends (...args:infer R) => any
     ? [key:K, ...args:R]
     : [key:K]
