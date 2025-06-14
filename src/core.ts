@@ -2,6 +2,9 @@
 import { log, warning } from "@daldalso/logger";
 import type { I18nInitializerProps, Lexicon, Lexiconista, ModuleLoader, ModuleOutput, Webpack } from "./types.js";
 
+interface LoadedI18n{
+  retrieve(key:string, ...args:any[]):any;
+}
 export default class I18n{
   public static locale:string;
   public static moduleLoaderBuilder:(locale:string) => ModuleLoader;
@@ -22,17 +25,13 @@ export default class I18n{
   public static createLexiconista<T extends ModuleOutput<any>['default']>(prefix:string):Lexiconista<T extends ModuleOutput<infer R>['default'] ? R : never>{
     return { prefix, lexicons: {} };
   }
-  public static loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<I18n>|I18n{
+  public static loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<LoadedI18n>|LoadedI18n{
     if(I18n.initializationTask){
       return I18n.initializationTask.then(() => I18n.loadLexicons(...lexiconistas));
     }
     const R = I18n.instances[I18n.locale] ||= new I18n(I18n.locale);
-    const task = R.loadLexicons(...lexiconistas);
 
-    if(task){
-      return task.then(() => R);
-    }
-    return R;
+    return R.loadLexicons(...lexiconistas);
   }
   public static register<const T extends Lexicon>(
     lexicon:T
@@ -97,7 +96,9 @@ export default class I18n{
             const fakeModule:NodeModule = { exports: {} } as NodeModule;
             context.r.m[l](fakeModule, fakeModule.exports, context.r);
             const lexicon = await (fakeModule.exports as ReturnType<ModuleLoader>);
-            instance?.mergeLexicon(lexicon.default);
+            const lexiconista = instance?.loadedLexiconistas[lexicon.href];
+
+            if(lexiconista) lexiconista.lexicons[instance.locale] = unwrapLexicon(lexicon.default);
           }
         }
         log("I18n file updated", ...entries.map(v => v[0]));
@@ -128,7 +129,7 @@ export default class I18n{
             for(const w of Object.values(moreModules)){
               w(m, x, r);
               r.c[w.name].hot.accept();
-              v.mergeLexicon((x as ModuleOutput<Lexicon>).default);
+              affectedLexiconista[1].lexicons[v.locale] = unwrapLexicon((x as ModuleOutput<Lexicon>).default);
               affectedLexiconista[1].onReload?.();
             }
           }
@@ -142,25 +143,38 @@ export default class I18n{
   public readonly locale:string;
   public readonly loadedLexiconistas:Record<string, Lexiconista<Lexicon>>;
   private readonly moduleLoader:ModuleLoader;
-  private readonly mergedLexicon:Lexicon;
 
   private constructor(locale:string){
     this.locale = locale;
     this.loadedLexiconistas = {};
     this.moduleLoader = I18n.moduleLoaderBuilder(locale);
-    this.mergedLexicon = {};
   }
-  private mergeLexicon(wrappedLexicon:ModuleOutput<Lexicon>['default']):void{
-    const ref = { current: null! as Lexicon };
-    wrappedLexicon(ref);
-    Object.assign(this.mergedLexicon, ref.current);
-  }
-  public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<void[]>|void{
+  public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<LoadedI18n>|LoadedI18n{
     const tasks:Array<Promise<void>> = [];
     const loadedPrefixes = Object.values(this.loadedLexiconistas).reduce((pv, v) => {
       pv[v.prefix] = true;
       return pv;
     }, {} as Record<string, true>);
+    const filter = ():LoadedI18n => {
+      // NOTE Need to cache?
+      const mergedLexicon:Lexicon = {};
+
+      for(const v of lexiconistas){
+        Object.assign(mergedLexicon, v.lexicons[this.locale]);
+      }
+      return {
+        retrieve(key, ...args){
+          let R = mergedLexicon[key];
+          if(R === undefined){
+            return `<<${key}>>`;
+          }
+          if(typeof R === "function"){
+            R = R.apply(mergedLexicon, args);
+          }
+          return R;
+        }
+      };
+    };
 
     for(const v of lexiconistas){
       if(v.prefix in loadedPrefixes) continue;
@@ -171,23 +185,19 @@ export default class I18n{
       tasks.push(v.task = this.moduleLoader(v.prefix)
         .then(res => {
           this.loadedLexiconistas[res.href] = v;
-          this.mergeLexicon(res.default);
+          v.lexicons[this.locale] = unwrapLexicon(res.default);
           delete v.task;
         })
       );
     }
     if(tasks.length){
-      return Promise.all(tasks);
+      return Promise.all(tasks).then(filter);
     }
+    return filter();
   }
-  public retrieve(key:string, ...args:any[]):any{
-    let R = this.mergedLexicon[key];
-    if(R === undefined){
-      return `<<${key}>>`;
-    }
-    if(typeof R === "function"){
-      R = R.apply(this.mergedLexicon, args);
-    }
-    return R;
-  }
+}
+function unwrapLexicon(unwrapper:ModuleOutput<Lexicon>['default']):Lexicon{
+  const ref = { current: null! as Lexicon };
+  unwrapper(ref);
+  return ref.current;
 }
