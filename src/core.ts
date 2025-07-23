@@ -143,11 +143,14 @@ export default class I18n{
   public readonly locale:string;
   public readonly loadedLexiconistas:Record<string, Lexiconista<Lexicon>>;
   private readonly moduleLoader:ModuleLoader;
+  // NOTE We need to cache to preserve React memoization.
+  private readonly retrieveCache:Map<string, LoadedI18n>;
 
   private constructor(locale:string){
     this.locale = locale;
     this.loadedLexiconistas = {};
     this.moduleLoader = I18n.moduleLoaderBuilder(locale);
+    this.retrieveCache = new Map();
   }
   public loadLexicons(...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<LoadedI18n>|LoadedI18n{
     const tasks:Array<Promise<void>> = [];
@@ -155,14 +158,14 @@ export default class I18n{
       pv[v.prefix] = true;
       return pv;
     }, {} as Record<string, true>);
+    const cacheKey = lexiconistas.map(v => v.prefix).toSorted().join(',');
+    if(this.retrieveCache.has(cacheKey)){
+      return this.retrieveCache.get(cacheKey)!;
+    }
     const filter = ():LoadedI18n => {
-      // NOTE Need to cache?
       const mergedLexicon:Lexicon = {};
-
-      for(const v of lexiconistas){
-        Object.assign(mergedLexicon, v.lexicons[this.locale]);
-      }
-      return {
+      for(const v of lexiconistas) Object.assign(mergedLexicon, v.lexicons[this.locale]);
+      const loadedI18n:LoadedI18n = {
         retrieve(key, ...args){
           let R = mergedLexicon[key];
           if(R === undefined){
@@ -174,6 +177,8 @@ export default class I18n{
           return R;
         }
       };
+      this.retrieveCache.set(cacheKey, loadedI18n);
+      return loadedI18n;
     };
 
     for(const v of lexiconistas){

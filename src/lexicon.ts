@@ -21,11 +21,11 @@ const lexicon = <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:
   }catch(error){
     console.warn(error);
   }
-  return R.retrieve.bind(R);
+  return R.retrieve;
 };
 export default lexicon;
 export const lexiconAsync = async <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:T):Promise<LFunction<LexiconsOf<T>>> => {
   const R = await I18n.loadLexicons(...lexiconistas);
 
-  return R.retrieve.bind(R);
+  return R.retrieve;
 };
