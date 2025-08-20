@@ -158,7 +158,7 @@ export default class I18n{
       pv[v.prefix] = true;
       return pv;
     }, {} as Record<string, true>);
-    const cacheKey = lexiconistas.map(v => v.prefix).toSorted().join(',');
+    const cacheKey = lexiconistas.map(v => v.prefix).sort().join(',');
     if(this.retrieveCache.has(cacheKey)){
       return this.retrieveCache.get(cacheKey)!;
     }
