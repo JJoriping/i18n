@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "@daldalso/i18n",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "Yet another internationalization library for React.js",
   "repository": {
     "url": "git+https://github.com/JJoriping/i18n.git"
@@ -39,7 +39,7 @@
     "unistore": "^3.5.2"
   },
   "dependencies": {
-    "@daldalso/logger": "^0.9.3-0",
+    "@daldalso/logger": "^0.9.5",
     "@inquirer/prompts": "^5.3.8"
   },
   "peerDependencies": {

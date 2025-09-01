@@ -42,10 +42,10 @@
     eslint-plugin-unicorn "*"
     typescript "^5"
 
-"@daldalso/logger@^0.9.2":
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/@daldalso/logger/-/logger-0.9.2.tgz#8cb0aaab9db163d9fea4f9760cd785b50acb647e"
-  integrity sha512-+V0xzlPAnvIJtMJSAsmQAnaOim2adfiaH2XpugoLtXvDoeOESBHyahkUyj4/k67jd1NEvfPwpklhxurOZ6ynbw==
+"@daldalso/logger@^0.9.5":
+  version "0.9.5"
+  resolved "https://registry.yarnpkg.com/@daldalso/logger/-/logger-0.9.5.tgz#d08de5bf1bd888dc112f9f912d92b0f4fc68f2e3"
+  integrity sha512-VojPV6jrKaCXIokiTNvb3l18NRn6LTbjKxIzOG5ENhMvyLUI+dXATVQsNpfrE6ZtDxZgkSExA69Z/DCzER06yg==
 
 "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.4.0":
   version "4.4.0"
