@@ -71,3 +71,17 @@ export default function Index(){
 ## Caveat
 You must use `await lexiconAsync(...)` instead of `lexicon(...)` if the execution of your component __precedes__ the execution of `I18nInitializer`.
 This often happens when it's called directly in a page component.
+
+### Server rendering with multiple locales
+`I18nInitializer` stores the locale in a single global. A server that renders requests for different locales at the same time (e.g. Next.js App Router with `/en/...` and `/ko/...`) can have that global overwritten by another request while a component is waiting, so the component may get the wrong language.
+In that case, pass the locale of the current request as the first argument:
+```tsx
+//: app/[locale]/page.tsx
+export default async function Index({ params }:{ params: Promise<{ locale: string }> }){
+  const { locale } = await params;
+  const l = await lexiconAsync(locale, lIndex);
+
+  return <h1>{l('foo')}</h1>;
+}
+```
+`lexicon(locale, ...)` works the same way.

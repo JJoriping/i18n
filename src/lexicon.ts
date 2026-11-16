@@ -2,8 +2,23 @@ import { useState } from "react";
 import I18n from "./core.js";
 import type { LFunction, Lexicon, Lexiconista, LexiconsOf } from "./types.js";
 
-const lexicon = <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:T):LFunction<LexiconsOf<T>> => {
-  const R = I18n.loadLexicons(...lexiconistas);
+type Lexiconistas = ReadonlyArray<Lexiconista<Lexicon>>;
+
+// NOTE A leading string argument is an explicit locale; see `I18n.loadLexiconsOf`.
+const load = (args:readonly [string, ...Lexiconistas]|Lexiconistas):ReturnType<typeof I18n.loadLexicons> => {
+  if(typeof args[0] === "string"){
+    const [ locale, ...lexiconistas ] = args as readonly [string, ...Lexiconistas];
+
+    return I18n.loadLexiconsOf(locale, ...lexiconistas);
+  }
+  return I18n.loadLexicons(...args as Lexiconistas);
+};
+
+function lexicon<T extends Lexiconistas>(...lexiconistas:T):LFunction<LexiconsOf<T>>;
+function lexicon<T extends Lexiconistas>(locale:string, ...lexiconistas:T):LFunction<LexiconsOf<T>>;
+function lexicon(...args:[string, ...Lexiconistas]|Lexiconistas):unknown{
+  const R = load(args);
+  const lexiconistas = (typeof args[0] === "string" ? args.slice(1) : args) as Lexiconistas;
 
   if(R instanceof Promise){
     // eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -22,10 +37,13 @@ const lexicon = <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:
     console.warn(error);
   }
   return R.retrieve;
-};
+}
 export default lexicon;
-export const lexiconAsync = async <T extends ReadonlyArray<Lexiconista<Lexicon>>>(...lexiconistas:T):Promise<LFunction<LexiconsOf<T>>> => {
-  const R = await I18n.loadLexicons(...lexiconistas);
+
+export function lexiconAsync<T extends Lexiconistas>(...lexiconistas:T):Promise<LFunction<LexiconsOf<T>>>;
+export function lexiconAsync<T extends Lexiconistas>(locale:string, ...lexiconistas:T):Promise<LFunction<LexiconsOf<T>>>;
+export async function lexiconAsync(...args:[string, ...Lexiconistas]|Lexiconistas):Promise<unknown>{
+  const R = await load(args);
 
   return R.retrieve;
-};
+}

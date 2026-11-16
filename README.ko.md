@@ -71,3 +71,17 @@ export default function Index(){
 ## 주의 사항
 `I18nInitializer`가 실행되기 전에 컴포넌트가 실행되는 경우, `lexicon(...)` 대신 `await lexiconAsync(...)`를 사용해야 합니다. 
 __주로__ 페이지 컴포넌트에서 직접 호출될 때 발생합니다.
+
+### 여러 언어를 서버에서 렌더링할 때
+`I18nInitializer`는 언어를 전역 값 하나에 저장합니다. 서로 다른 언어의 요청을 동시에 렌더링하는 서버(예: `/en/...`과 `/ko/...`를 둔 Next.js App Router)에서는 컴포넌트가 기다리는 동안 다른 요청이 그 전역 값을 덮어써서, 다른 언어가 나올 수 있습니다.
+이때는 현재 요청의 언어를 첫 번째 인자로 넘기세요:
+```tsx
+//: app/[locale]/page.tsx
+export default async function Index({ params }:{ params: Promise<{ locale: string }> }){
+  const { locale } = await params;
+  const l = await lexiconAsync(locale, lIndex);
+
+  return <h1>{l('foo')}</h1>;
+}
+```
+`lexicon(locale, ...)`도 같은 방식으로 쓸 수 있습니다.

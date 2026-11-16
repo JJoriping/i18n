@@ -29,7 +29,15 @@ export default class I18n{
     if(I18n.initializationTask){
       return I18n.initializationTask.then(() => I18n.loadLexicons(...lexiconistas));
     }
-    const R = I18n.instances[I18n.locale] ||= new I18n(I18n.locale);
+    return I18n.loadLexiconsOf(I18n.locale, ...lexiconistas);
+  }
+  /**
+   * Loads lexicons for the given locale without reading the global `I18n.locale`.
+   * On a server that renders requests for different locales concurrently, the global locale can be
+   * overwritten by another request between `I18nInitializer` and this call, so pass the locale explicitly there.
+   */
+  public static loadLexiconsOf(locale:string, ...lexiconistas:Array<Lexiconista<Lexicon>>):Promise<LoadedI18n>|LoadedI18n{
+    const R = I18n.instances[locale] ||= new I18n(locale);
 
     return R.loadLexicons(...lexiconistas);
   }
@@ -183,17 +191,20 @@ export default class I18n{
 
     for(const v of lexiconistas){
       if(v.prefix in loadedPrefixes) continue;
-      if(v.task){
-        tasks.push(v.task);
+      const pending = v.tasks?.[this.locale];
+      if(pending){
+        tasks.push(pending);
         continue;
       }
-      tasks.push(v.task = this.moduleLoader(v.prefix)
+      const task = this.moduleLoader(v.prefix)
         .then(res => {
           this.loadedLexiconistas[res.href] = v;
           v.lexicons[this.locale] = unwrapLexicon(res.default);
-          delete v.task;
+          delete v.tasks![this.locale];
         })
-      );
+      ;
+      (v.tasks ||= {})[this.locale] = task;
+      tasks.push(task);
     }
     if(tasks.length){
       return Promise.all(tasks).then(filter);
