@@ -9,7 +9,8 @@ export type Lexicon = Readonly<Record<string, ReactNode|((...args:any[]) => Reac
 export type Lexiconista<T extends Lexicon> = {
   'prefix': string,
   'lexicons': Record<string, T>,
-  'task'?: Promise<void>,
+  // NOTE Keyed by locale so that loading one locale never waits on (or is mistaken for) another.
+  'tasks'?: Record<string, Promise<void>>,
   'onReload'?: () => void
 };
 export type MergedLexicon<T extends readonly Lexicon[]> = T extends [ infer R, ...infer Rest extends readonly Lexicon[] ]
